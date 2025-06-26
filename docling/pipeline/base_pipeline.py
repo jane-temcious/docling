@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import Any, Callable, List
 
+from docling.utils.gpu_utils import clear_gpu_memory
+
 from docling_core.types.doc import NodeItem
 
 from docling.backend.abstract_backend import AbstractDocumentBackend
@@ -93,7 +95,8 @@ class BasePipeline(ABC):
         pass
 
     def _unload(self, conv_res: ConversionResult):
-        pass
+        # Clear GPU memory after processing
+        clear_gpu_memory()
 
     @classmethod
     @abstractmethod
@@ -207,12 +210,17 @@ class PaginatedPipeline(BasePipeline):  # TODO this is a bad name.
         return conv_res
 
     def _unload(self, conv_res: ConversionResult) -> ConversionResult:
+        # Unload page backends
         for page in conv_res.pages:
             if page._backend is not None:
                 page._backend.unload()
 
+        # Unload input backend
         if conv_res.input._backend:
             conv_res.input._backend.unload()
+            
+        # Call parent _unload to clean up GPU memory
+        super()._unload(conv_res)
 
         return conv_res
 
