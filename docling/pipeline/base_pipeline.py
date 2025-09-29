@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, Callable, List, Optional
-
+from docling.utils.gpu_utils import clear_gpu_memory
 from docling_core.types.doc import NodeItem
 
 from docling.backend.abstract_backend import (
@@ -119,7 +119,8 @@ class BasePipeline(ABC):
         pass
 
     def _unload(self, conv_res: ConversionResult):
-        pass
+        # pass
+        clear_gpu_memory()
 
     @classmethod
     @abstractmethod
@@ -289,6 +290,8 @@ class PaginatedPipeline(ConvertPipeline):  # TODO this is a bad name.
 
         if conv_res.input._backend:
             conv_res.input._backend.unload()
+
+        super()._unload(conv_res)
 
         return conv_res
 
